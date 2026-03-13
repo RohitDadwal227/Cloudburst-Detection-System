@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#03080f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CloudBurst India">
+<meta name="description" content="Live weather & cloudburst storm risk for any Indian city. Powered by OpenWeatherMap & IMD standards.">
+<meta property="og:title" content="CloudBurst India — Live Weather & Storm Risk">
+<meta property="og:description" content="Real-time weather & cloudburst risk for any Indian city">
+<meta property="og:type" content="website">
+<link rel="manifest" href="manifest.json">
+<title>CloudBurst India — Live Weather & Storm Risk</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#03080f;--bg1:#060f1e;--card:rgba(8,20,48,.8);
+  --border:rgba(56,160,255,.14);--border2:rgba(56,160,255,.3);
+  --accent:#3ab7ff;--accent2:#0077dd;
+  --danger:#ff2b4e;--warn:#ffb300;--good:#00d97e;
+  --text:#c4deff;--muted:rgba(160,200,255,.52);
+  --font:'Outfit',sans-serif;--mono:'Space Mono',monospace;--r:14px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font);background:var(--bg0);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* BG */
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;}
+.bg-g{position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 10%,rgba(0,100,255,.08),transparent 60%),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(0,60,180,.06),transparent 50%),linear-gradient(180deg,#03080f,#060f1e 50%,#040b18);}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(56,160,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(56,160,255,.025) 1px,transparent 1px);background-size:50px 50px;}
+#rain{position:absolute;inset:0;opacity:.12;}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(3,8,15,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 clamp(16px,4vw,48px);padding-left:max(clamp(16px,4vw,48px),env(safe-area-inset-left));padding-right:max(clamp(16px,4vw,48px),env(safe-area-inset-right));height:60px;display:flex;align-items:center;gap:18px;}
+.nlogo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nlogo-icon{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--accent2),#0040aa);display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 16px rgba(0,120,255,.4);flex-shrink:0;}
+.nlogo-text{font-size:1.1rem;font-weight:800;color:#fff;line-height:1;}
+.nlogo-text em{color:var(--accent);font-style:normal;}
+.nlogo-sub{font-family:var(--mono);font-size:.52rem;color:var(--muted);margin-top:2px;}
+.nspacer{flex:1;}
+.ntime{font-family:var(--mono);font-size:.68rem;color:var(--muted);display:flex;align-items:center;gap:7px;}
+.ndot{width:6px;height:6px;background:var(--good);border-radius:50%;animation:ndot 2s infinite;}
+@keyframes ndot{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,217,126,.4)}50%{opacity:.7;box-shadow:0 0 0 5px rgba(0,217,126,0)}}
+
+/* PAGE */
+.page{position:relative;z-index:1;max-width:1140px;margin:0 auto;padding:32px clamp(14px,3vw,32px) 80px;padding-bottom:max(80px,env(safe-area-inset-bottom));}
+
+/* HERO */
+.hero{text-align:center;padding:44px 20px 36px;}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(58,183,255,.08);border:1px solid rgba(58,183,255,.22);border-radius:20px;padding:5px 14px;font-family:var(--mono);font-size:.58rem;color:var(--accent);letter-spacing:1px;margin-bottom:18px;}
+.hero h1{font-size:clamp(2rem,5vw,3.4rem);font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.08;margin-bottom:10px;}
+.hero h1 em{color:var(--accent);font-style:normal;}
+.hero p{font-size:clamp(.88rem,2vw,1.05rem);color:var(--muted);max-width:520px;margin:0 auto 28px;line-height:1.6;}
+
+/* SEARCH */
+.sbox{max-width:600px;margin:0 auto;position:relative;}
+.sinner{display:flex;background:rgba(6,16,40,.95);border:1.5px solid var(--border2);border-radius:12px;transition:border-color .25s,box-shadow .25s;}
+.sinner:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(58,183,255,.12);}
+.sicon{padding:0 14px;font-size:1rem;display:flex;align-items:center;color:var(--muted);}
+.sinput{flex:1;background:transparent;border:none;outline:none;color:#fff;font-family:var(--font);font-size:1rem;font-weight:500;padding:13px 0;}
+.sinput::placeholder{color:var(--muted);}
+.sbtn{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:9px 22px;margin:5px;color:#fff;font-family:var(--font);font-weight:700;font-size:.88rem;cursor:pointer;white-space:nowrap;box-shadow:0 4px 14px rgba(0,100,255,.28);transition:opacity .2s,transform .2s;}
+.sbtn:hover{opacity:.9;transform:translateY(-1px);}
+.sbtn:disabled{opacity:.42;cursor:not-allowed;transform:none;}
+
+/* Autocomplete */
+.acdrop{position:absolute;top:calc(100% + 6px);left:0;right:0;background:rgba(4,12,32,.98);border:1px solid var(--border2);border-radius:10px;z-index:200;display:none;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.5);}
+.acdrop.open{display:block;}
+.acitem{padding:10px 15px;cursor:pointer;display:flex;align-items:center;gap:9px;border-bottom:1px solid rgba(56,160,255,.07);transition:background .13s;font-size:.9rem;}
+.acitem:last-child{border-bottom:none;}
+.acitem:hover{background:rgba(58,183,255,.08);}
+.acstate{margin-left:auto;font-family:var(--mono);font-size:.58rem;color:var(--muted);}
+
+/* Chips */
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:12px;}
+.clbl{font-family:var(--mono);font-size:.58rem;color:var(--muted);display:flex;align-items:center;}
+.chip{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:20px;padding:3px 12px;font-size:.74rem;cursor:pointer;color:var(--muted);transition:all .17s;}
+.chip:hover{background:rgba(58,183,255,.1);border-color:var(--accent);color:var(--accent);}
+
+/* ERROR */
+.errbar{display:none;max-width:600px;margin:12px auto 0;background:rgba(255,43,78,.08);border:1px solid rgba(255,43,78,.28);border-radius:9px;padding:12px 16px;color:#ff8896;font-size:.86rem;gap:8px;align-items:flex-start;}
+.errbar.show{display:flex;}
+
+/* LOADER */
+.loader{display:none;text-align:center;padding:60px 20px;}
+.loader.show{display:block;}
+.lring{width:64px;height:64px;margin:0 auto 18px;border-radius:50%;border:2px solid rgba(58,183,255,.14);border-top-color:var(--accent);animation:spin .85s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader p{font-family:var(--mono);font-size:.66rem;color:var(--muted);}
+.loader sub{display:block;margin-top:5px;font-size:.56rem;opacity:.55;}
+
+/* DASHBOARD */
+#dash{display:none;}
+#dash.show{display:block;}
+
+/* LOC HEADER */
+.lochdr{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--border);}
+.loc-city{font-size:clamp(1.6rem,4vw,2.3rem);font-weight:900;color:#fff;line-height:1;letter-spacing:-.4px;}
+.loc-sub{font-size:.88rem;color:var(--muted);margin-top:4px;}
+.loc-coords{font-family:var(--mono);font-size:.58rem;color:var(--muted);margin-top:3px;}
+.loc-upd{font-family:var(--mono);font-size:.6rem;color:var(--muted);text-align:right;line-height:2;}
+.loc-src{display:inline-flex;align-items:center;gap:5px;background:rgba(0,217,126,.07);border:1px solid rgba(0,217,126,.2);border-radius:5px;padding:2px 9px;font-family:var(--mono);font-size:.56rem;color:var(--good);}
+
+/* RISK CARD */
+.rcard{border-radius:var(--r);padding:22px 24px;margin-bottom:18px;border:1.5px solid;position:relative;overflow:hidden;}
+.rcard::before{content:'';position:absolute;inset:0;opacity:.055;background:repeating-linear-gradient(45deg,currentColor,currentColor 1px,transparent 1px,transparent 10px);}
+.rcard.low{background:rgba(0,200,110,.07);border-color:rgba(0,200,110,.28);}
+.rcard.moderate{background:rgba(255,179,0,.08);border-color:rgba(255,179,0,.32);}
+.rcard.high{background:rgba(255,90,0,.1);border-color:rgba(255,90,0,.38);animation:rh 2.2s infinite;}
+.rcard.extreme{background:rgba(255,20,50,.12);border-color:rgba(255,20,50,.48);animation:re 1.5s infinite;}
+@keyframes rh{0%,100%{box-shadow:none}50%{box-shadow:0 0 28px rgba(255,90,0,.18)}}
+@keyframes re{0%,100%{box-shadow:none}50%{box-shadow:0 0 38px rgba(255,20,50,.26)}}
+.rtop{display:flex;gap:13px;align-items:center;margin-bottom:11px;}
+.remoji{font-size:2.4rem;line-height:1;}
+.rtag{font-family:var(--mono);font-size:.57rem;color:var(--muted);letter-spacing:2px;margin-bottom:3px;}
+.rname{font-size:1.5rem;font-weight:900;line-height:1;}
+.low .rname{color:var(--good);} .moderate .rname{color:var(--warn);} .high .rname{color:#ff6200;} .extreme .rname{color:var(--danger);}
+.rdesc{font-size:.86rem;color:var(--text);line-height:1.65;opacity:.9;}
+.mlbls{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.54rem;color:var(--muted);margin:13px 0 4px;}
+.mtrack{height:7px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;}
+.mfill{height:100%;border-radius:4px;width:0;transition:width 1.6s cubic-bezier(.4,0,.2,1);}
+.low .mfill{background:linear-gradient(90deg,#009050,var(--good));}
+.moderate .mfill{background:linear-gradient(90deg,#bb8000,var(--warn));}
+.high .mfill{background:linear-gradient(90deg,#bb3200,#ff6200);}
+.extreme .mfill{background:linear-gradient(90deg,#aa0018,var(--danger));}
+.factors{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px;}
+.factor{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:7px;padding:6px 10px;font-size:.74rem;}
+.factor.bad{background:rgba(255,45,78,.09);border-color:rgba(255,45,78,.25);}
+
+/* WEATHER HERO */
+.who{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:18px;}
+@media(max-width:640px){.who{grid-template-columns:1fr;}}
+.wmain{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px;display:flex;flex-direction:column;justify-content:space-between;backdrop-filter:blur(12px);background-image:radial-gradient(ellipse at top right,rgba(58,183,255,.07),transparent 60%);}
+.wmtop{display:flex;align-items:flex-start;justify-content:space-between;}
+.wmtemp{font-size:clamp(3rem,7vw,4.8rem);font-weight:900;color:#fff;line-height:1;letter-spacing:-2px;}
+.wmunit{font-size:1.6rem;color:var(--muted);font-weight:300;}
+.wmicon{font-size:3.8rem;line-height:1;}
+.wmdesc{font-size:1.05rem;font-weight:600;color:var(--text);margin-top:7px;text-transform:capitalize;}
+.wmfeels{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:4px;}
+.wmbot{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px;}
+.wmstat-lbl{font-family:var(--mono);font-size:.54rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+.wmstat-val{font-size:1.05rem;font-weight:700;color:#fff;}
+
+/* Sun card */
+.sunc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;backdrop-filter:blur(12px);display:flex;flex-direction:column;gap:13px;}
+.sunrow{display:flex;justify-content:space-between;align-items:center;}
+.sunit2{text-align:center;}
+.sunlbl{font-family:var(--mono);font-size:.54rem;color:var(--muted);letter-spacing:1px;margin-bottom:5px;}
+.sunval{font-size:1.1rem;font-weight:700;color:#fff;}
+.sunarc{width:100%;height:68px;position:relative;}
+.sunarc svg{width:100%;height:100%;}
+
+/* STATS */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(162px,1fr));gap:10px;margin-bottom:18px;}
+.scard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px 17px;backdrop-filter:blur(12px);transition:border-color .22s,transform .22s;position:relative;overflow:hidden;}
+.scard::after{content:attr(data-ico);position:absolute;bottom:-4px;right:7px;font-size:2.6rem;opacity:.055;line-height:1;pointer-events:none;}
+.scard:hover{border-color:var(--border2);transform:translateY(-2px);}
+.slbl{font-family:var(--mono);font-size:.54rem;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;}
+.sval{font-size:1.75rem;font-weight:900;color:#fff;line-height:1;}
+.sunit{font-size:.8rem;color:var(--muted);font-weight:300;}
+.ssub{font-size:.68rem;color:var(--muted);margin-top:3px;}
+.sbar{height:4px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:9px;overflow:hidden;}
+.sbar-fill{height:100%;border-radius:2px;transition:width 1.4s cubic-bezier(.4,0,.2,1);}
+
+/* SEC TITLE */
+.sec{font-family:var(--mono);font-size:.6rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;display:flex;align-items:center;gap:9px;margin-bottom:11px;}
+.sec::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* PANEL */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;backdrop-filter:blur(12px);}
+
+/* HOURLY */
+.hscrl{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;}
+.hscrl::-webkit-scrollbar{height:3px;}
+.hscrl::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.hcard{flex-shrink:0;min-width:70px;text-align:center;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;padding:9px 10px;transition:all .17s;}
+.hcard:hover{background:rgba(58,183,255,.07);border-color:var(--border2);}
+.hcard.hi{background:rgba(255,45,78,.09);border-color:rgba(255,45,78,.3);}
+.htime{font-family:var(--mono);font-size:.54rem;color:var(--muted);margin-bottom:4px;}
+.hico{font-size:1.25rem;margin-bottom:4px;}
+.htmp{font-size:.88rem;font-weight:700;color:#fff;margin-bottom:2px;}
+.hrn{font-family:var(--mono);font-size:.53rem;color:var(--accent);}
+.hpop{font-family:var(--mono);font-size:.53rem;color:var(--warn);}
+
+/* FORECAST GRID */
+.fgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:9px;margin-bottom:18px;}
+@media(max-width:700px){.fgrid{grid-template-columns:repeat(4,1fr);}}
+@media(max-width:400px){.fgrid{grid-template-columns:repeat(3,1fr);}}
+.fcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 9px;text-align:center;backdrop-filter:blur(12px);transition:all .17s;}
+.fcard:hover{border-color:var(--border2);transform:translateY(-2px);}
+.fcard.today{border-color:rgba(58,183,255,.35);background:rgba(58,183,255,.06);}
+.fday{font-family:var(--mono);font-size:.58rem;color:var(--muted);margin-bottom:6px;}
+.fico{font-size:1.5rem;margin-bottom:6px;}
+.fhi{font-size:.96rem;font-weight:800;color:#fff;}
+.flo{font-size:.75rem;color:var(--muted);margin-top:2px;}
+.frn{font-family:var(--mono);font-size:.52rem;color:var(--accent);margin-top:4px;}
+.fpop{font-family:var(--mono);font-size:.52rem;color:var(--warn);}
+
+/* DETAIL ROW */
+.drow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;}
+@media(max-width:640px){.drow{grid-template-columns:1fr 1fr;}}
+@media(max-width:380px){.drow{grid-template-columns:1fr;}}
+.dcrd{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;backdrop-filter:blur(12px);}
+
+/* Compass */
+.cmps{width:88px;height:88px;border-radius:50%;border:1.5px solid var(--border);position:relative;margin:0 auto 9px;background:radial-gradient(circle,rgba(58,183,255,.06),transparent 70%);}
+.cdir{position:absolute;font-family:var(--mono);font-size:.54rem;color:var(--muted);}
+.cN{top:2px;left:50%;transform:translateX(-50%);}
+.cS{bottom:2px;left:50%;transform:translateX(-50%);}
+.cW{left:2px;top:50%;transform:translateY(-50%);}
+.cE{right:2px;top:50%;transform:translateY(-50%);}
+.cneedle{position:absolute;top:50%;left:50%;width:3px;height:30px;background:linear-gradient(to bottom,var(--accent),transparent);transform-origin:50% 100%;margin-left:-1.5px;margin-top:-30px;border-radius:2px;transition:transform 1.2s cubic-bezier(.4,0,.2,1);}
+.cdot{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 7px var(--accent);}
+.windinfo{text-align:center;}
+.wspeed{font-size:1.55rem;font-weight:900;color:#fff;}
+.wdirlbl{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:2px;}
+
+/* UV */
+.uvtrack{height:9px;border-radius:5px;margin:11px 0 6px;background:linear-gradient(90deg,#00cc55,#ffee00,#ff6600,#cc0000,#660066);position:relative;}
+.uvpip{position:absolute;top:-3px;width:15px;height:15px;background:#fff;border-radius:50%;box-shadow:0 0 7px rgba(0,0,0,.5);transition:left 1.2s cubic-bezier(.4,0,.2,1);margin-left:-7px;}
+.uvlbls{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.5rem;color:var(--muted);}
+
+/* TIPS */
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px;margin-bottom:18px;}
+.tcard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;display:flex;gap:11px;backdrop-filter:blur(12px);}
+.tico{font-size:1.25rem;flex-shrink:0;margin-top:1px;}
+.ttl{font-size:.8rem;font-weight:700;color:#fff;margin-bottom:3px;}
+.tbd{font-size:.7rem;color:var(--muted);line-height:1.55;}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:26px clamp(14px,3vw,32px);position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;font-family:var(--mono);font-size:.58rem;color:var(--muted);}
+.ftl{line-height:2.1;}
+.ftbadges{display:flex;flex-wrap:wrap;gap:5px;}
+.ftb{background:rgba(58,183,255,.07);border:1px solid rgba(58,183,255,.14);border-radius:4px;padding:2px 8px;color:var(--accent);}
+
+/* UTILS */
+.fi{animation:fi .45s ease both;}
+@keyframes fi{from{opacity:0;transform:translateY(11px)}to{opacity:1;transform:none}}
+.d1{animation-delay:.05s}.d2{animation-delay:.1s}.d3{animation-delay:.15s}.d4{animation-delay:.2s}.d5{animation-delay:.25s}
+@media(max-width:480px){.sgrid{grid-template-columns:repeat(2,1fr);}nav .nlogo-sub,.ntime{display:none;}}
+</style>
+</head>
+<body>
+
+<div class="bg"><div class="bg-g"></div><div class="bg-grid"></div><canvas id="rain"></canvas></div>
+
+<nav>
+  <a class="nlogo" href="#">
+    <div class="nlogo-icon">⛈️</div>
+    <div><div class="nlogo-text">Cloud<em>Burst</em> India</div><div class="nlogo-sub">STORM RISK INTELLIGENCE</div></div>
+  </a>
+  <div class="nspacer"></div>
+  <div class="ntime"><div class="ndot"></div><span id="nclock">--:--</span> IST · LIVE</div>
+</nav>
+
+<div class="page">
+  <div class="hero" id="hero">
+    <div class="hero-badge">🌩️ REAL-TIME WEATHER · CLOUDBURST DETECTION · IMD STANDARDS</div>
+    <h1>India's Advanced<br><em>Storm Risk</em> Platform</h1>
+    <p>Live weather powered by OpenWeatherMap. Cloudburst risk scoring using IMD standards. Search any Indian city instantly.</p>
+
+    <div class="sbox">
+      <div class="sinner">
+        <div class="sicon">📍</div>
+        <input class="sinput" id="q" type="text" placeholder="Search any city in India… (e.g. Mumbai, Dehradun)" autocomplete="off">
+        <button class="sbtn" id="sbtn" onclick="doSearch()">Search</button>
+      </div>
+      <div class="acdrop" id="acdrop"></div>
+    </div>
+
+    <div class="chips">
+      <span class="clbl">Popular:</span>
+      <span class="chip" onclick="pick('Mumbai')">Mumbai</span>
+      <span class="chip" onclick="pick('Delhi')">Delhi</span>
+      <span class="chip" onclick="pick('Dehradun')">Dehradun</span>
+      <span class="chip" onclick="pick('Cherrapunji')">Cherrapunji</span>
+      <span class="chip" onclick="pick('Kolkata')">Kolkata</span>
+      <span class="chip" onclick="pick('Chennai')">Chennai</span>
+      <span class="chip" onclick="pick('Shimla')">Shimla</span>
+      <span class="chip" onclick="pick('Guwahati')">Guwahati</span>
+      <span class="chip" onclick="pick('Kochi')">Kochi</span>
+    </div>
+
+    <div class="errbar" id="errbar"><span>⚠️</span><span id="errtxt"></span></div>
+  </div>
+
+  <div class="loader" id="ldr">
+    <div class="lring"></div>
+    <p>FETCHING LIVE WEATHER DATA…</p>
+    <sub id="lsub">Connecting to OpenWeatherMap</sub>
+  </div>
+
+  <div id="dash">
+    <div class="lochdr fi">
+      <div>
+        <div class="loc-city" id="d-city">—</div>
+        <div class="loc-sub" id="d-sub">—</div>
+        <div class="loc-coords" id="d-coords">—</div>
+      </div>
+      <div>
+        <div class="loc-upd" id="d-upd">—</div>
+        <div class="loc-src">✅ OpenWeatherMap · Live Data</div>
+      </div>
+    </div>
+
+    <!-- Risk -->
+    <div class="rcard fi d1" id="rcard">
+      <div class="rtop">
+        <div class="remoji" id="remoji">—</div>
+        <div><div class="rtag">⚡ CLOUDBURST RISK LEVEL</div><div class="rname" id="rname">—</div></div>
+      </div>
+      <div class="rdesc" id="rdesc">—</div>
+      <div class="mlbls"><span>LOW</span><span>MODERATE</span><span>HIGH</span><span>EXTREME</span></div>
+      <div class="mtrack"><div class="mfill" id="mfill"></div></div>
+      <div class="factors" id="rfactors"></div>
+    </div>
+
+    <!-- Main weather + sun -->
+    <div class="who fi d2">
+      <div class="wmain">
+        <div class="wmtop">
+          <div>
+            <div class="wmtemp" id="wmtemp">—<span class="wmunit">°C</span></div>
+            <div class="wmdesc" id="wmdesc">—</div>
+            <div class="wmfeels" id="wmfeels">—</div>
+          </div>
+          <div class="wmicon" id="wmicon">—</div>
+        </div>
+        <div class="wmbot">
+          <div><div class="wmstat-lbl">HIGH</div><div class="wmstat-val" id="wm-hi">—</div></div>
+          <div><div class="wmstat-lbl">LOW</div><div class="wmstat-val" id="wm-lo">—</div></div>
+          <div><div class="wmstat-lbl">HUMIDITY</div><div class="wmstat-val" id="wm-hum">—</div></div>
+          <div><div class="wmstat-lbl">RAIN TODAY</div><div class="wmstat-val" id="wm-rain">—</div></div>
+        </div>
+      </div>
+      <div class="sunc">
+        <div class="sunrow">
+          <div class="sunit2"><div class="sunlbl">🌅 SUNRISE</div><div class="sunval" id="sunrise">—</div></div>
+          <div class="sunit2"><div class="sunlbl">🌇 SUNSET</div><div class="sunval" id="sunset">—</div></div>
+        </div>
+        <div class="sunarc">
+          <svg viewBox="0 0 200 70" fill="none">
+            <path d="M10 65 Q100 -5 190 65" stroke="rgba(58,183,255,.18)" stroke-width="1.5" fill="none"/>
+            <path d="M10 65 Q100 -5 190 65" stroke="url(#sg)" stroke-width="2" fill="none"/>
+            <defs><linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ffaa00"/><stop offset="50%" stop-color="#ffdd00"/><stop offset="100%" stop-color="#ff6600"/></linearGradient></defs>
+            <circle id="sundot" cx="100" cy="18" r="5" fill="#ffdd00"/>
+          </svg>
+        </div>
+        <div class="sunrow">
+          <div class="sunit2"><div class="sunlbl">☀️ UV (EST)</div><div class="sunval" id="sun-uv">—</div></div>
+          <div class="sunit2"><div class="sunlbl">👁 VISIBILITY</div><div class="sunval" id="sun-vis">—</div></div>
+          <div class="sunit2"><div class="sunlbl">☁️ CLOUD</div><div class="sunval" id="sun-cld">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="sec">ATMOSPHERIC DATA</div>
+    <div class="sgrid fi d2" id="sgrid"></div>
+
+    <!-- Hourly -->
+    <div class="sec">48-HOUR FORECAST</div>
+    <div class="panel fi d3" style="margin-bottom:18px">
+      <div class="hscrl" id="hscrl"></div>
+    </div>
+
+    <!-- 7-day -->
+    <div class="sec">7-DAY FORECAST</div>
+    <div class="fgrid fi d3" id="fgrid"></div>
+
+    <!-- Detail row -->
+    <div class="sec">DETAILED CONDITIONS</div>
+    <div class="drow fi d4">
+      <div class="dcrd">
+        <div class="sec" style="margin-bottom:13px">WIND</div>
+        <div class="cmps">
+          <span class="cdir cN">N</span><span class="cdir cS">S</span>
+          <span class="cdir cW">W</span><span class="cdir cE">E</span>
+          <div class="cneedle" id="needle"></div><div class="cdot"></div>
+        </div>
+        <div class="windinfo">
+          <div class="wspeed" id="wspd">— <span style="font-size:.9rem;color:var(--muted)">km/h</span></div>
+          <div class="wdirlbl" id="wdirlbl">—</div>
+        </div>
+      </div>
+      <div class="dcrd">
+        <div class="sec" style="margin-bottom:11px">UV INDEX</div>
+        <div style="font-size:2rem;font-weight:900;color:#fff" id="uvval">—</div>
+        <div class="uvtrack"><div class="uvpip" id="uvpip"></div></div>
+        <div class="uvlbls"><span>LOW</span><span>MOD</span><span>HIGH</span><span>V.HI</span><span>EXT</span></div>
+        <div id="uvdesc" style="font-size:.76rem;color:var(--muted);margin-top:9px">—</div>
+        <div style="margin-top:15px;border-top:1px solid var(--border);padding-top:13px">
+          <div class="sec" style="margin-bottom:5px">PRESSURE</div>
+          <div style="font-size:1.45rem;font-weight:900;color:#fff" id="presval">—</div>
+          <div style="font-size:.68rem;color:var(--muted);margin-top:2px" id="presdesc">—</div>
+        </div>
+      </div>
+      <div class="dcrd">
+        <div class="sec" style="margin-bottom:11px">HUMIDITY & DEW</div>
+        <div style="font-size:2.1rem;font-weight:900;color:#fff" id="humval">—<span style="font-size:.9rem;color:var(--muted)">%</span></div>
+        <div class="sbar" style="margin-top:9px"><div class="sbar-fill" id="humbar" style="background:linear-gradient(90deg,#0077dd,var(--accent))"></div></div>
+        <div style="font-size:.68rem;color:var(--muted);margin-top:5px" id="humdesc">—</div>
+        <div style="margin-top:15px;border-top:1px solid var(--border);padding-top:13px">
+          <div class="sec" style="margin-bottom:5px">DEWPOINT</div>
+          <div style="font-size:1.45rem;font-weight:900;color:#fff" id="dewval">—</div>
+          <div style="font-size:.68rem;color:var(--muted);margin-top:2px" id="dewdesc">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tips -->
+    <div class="sec">SAFETY ADVISORY</div>
+    <div class="tgrid fi d5" id="tgrid"></div>
+  </div>
+</div>
+
+<footer>
+  <div class="ftl">
+    <div>© 2025 CloudBurst India — Storm Risk Intelligence Platform</div>
+    <div>Data refreshes every 10 min · Cloudburst ≥100mm/hr (IMD) · Emergency: <strong style="color:var(--accent)">NDMA 1078</strong> | Police 100 | Ambulance 108</div>
+  </div>
+  <div class="ftbadges">
+    <span class="ftb">OpenWeatherMap</span>
+    <span class="ftb">IMD Standards</span>
+    <span class="ftb">NDMA Guidelines</span>
+  </div>
+</footer>
+
+<script>
+/* ── RAIN ───────────────────────────────────────────────────────────── */
+(()=>{
+  const c=document.getElementById('rain'),ctx=c.getContext('2d');
+  const rs=()=>{c.width=innerWidth;c.height=innerHeight;};rs();addEventListener('resize',rs);
+  const D=Array.from({length:90},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,l:Math.random()*20+8,s:Math.random()*3+1.5,o:Math.random()*.32+.07,w:Math.random()*.7+.2}));
+  (function draw(){ctx.clearRect(0,0,c.width,c.height);D.forEach(d=>{ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-1,d.y+d.l);ctx.strokeStyle=`rgba(80,170,255,${d.o})`;ctx.lineWidth=d.w;ctx.stroke();d.y+=d.s;if(d.y>c.height){d.y=-d.l;d.x=Math.random()*c.width;}});requestAnimationFrame(draw);})();
+})();
+
+/* ── CLOCK ─────────────────────────────────────────────────────────── */
+setInterval(()=>{document.getElementById('nclock').textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});},1000);
+
+/* ── CONSTANTS ─────────────────────────────────────────────────────── */
+const API_KEY = 'ccc12e9508e68e923cd1f0d502d3ea23';
+
+const DIRS=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+const DAYS3=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const OICONS={'01d':'☀️','01n':'🌙','02d':'🌤️','02n':'🌤️','03d':'⛅','03n':'⛅','04d':'☁️','04n':'☁️','09d':'🌧️','09n':'🌧️','10d':'🌦️','10n':'🌦️','11d':'⛈️','11n':'⛈️','13d':'❄️','13n':'❄️','50d':'🌫️','50n':'🌫️'};
+
+const $=i=>document.getElementById(i);
+const wdir=d=>DIRS[Math.round(d/22.5)%16];
+const toC=k=>(k-273.15).toFixed(1);
+const toCr=k=>Math.round(k-273.15);
+const oico=i=>OICONS[i]||'🌡️';
+const fmtT=(ts,tz)=>new Date((ts+tz)*1000).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'});
+const fmtD=(ts,tz,sh=true)=>{const d=new Date((ts+tz)*1000);return sh?DAYS3[d.getUTCDay()]:DAYS3[d.getUTCDay()];};
+
+/* ── CITIES ─────────────────────────────────────────────────────────── */
+const CITIES=[
+  {n:'Mumbai',s:'Maharashtra'},{n:'Delhi',s:'Delhi'},{n:'Bangalore',s:'Karnataka'},
+  {n:'Hyderabad',s:'Telangana'},{n:'Chennai',s:'Tamil Nadu'},{n:'Kolkata',s:'West Bengal'},
+  {n:'Pune',s:'Maharashtra'},{n:'Ahmedabad',s:'Gujarat'},{n:'Jaipur',s:'Rajasthan'},
+  {n:'Surat',s:'Gujarat'},{n:'Lucknow',s:'Uttar Pradesh'},{n:'Kanpur',s:'Uttar Pradesh'},
+  {n:'Nagpur',s:'Maharashtra'},{n:'Patna',s:'Bihar'},{n:'Indore',s:'Madhya Pradesh'},
+  {n:'Bhopal',s:'Madhya Pradesh'},{n:'Dehradun',s:'Uttarakhand'},{n:'Haridwar',s:'Uttarakhand'},
+  {n:'Rishikesh',s:'Uttarakhand'},{n:'Guwahati',s:'Assam'},{n:'Shillong',s:'Meghalaya'},
+  {n:'Cherrapunji',s:'Meghalaya'},{n:'Shimla',s:'Himachal Pradesh'},{n:'Manali',s:'Himachal Pradesh'},
+  {n:'Srinagar',s:'J&K'},{n:'Jammu',s:'J&K'},{n:'Leh',s:'Ladakh'},
+  {n:'Kochi',s:'Kerala'},{n:'Thiruvananthapuram',s:'Kerala'},{n:'Kozhikode',s:'Kerala'},
+  {n:'Coimbatore',s:'Tamil Nadu'},{n:'Madurai',s:'Tamil Nadu'},
+  {n:'Visakhapatnam',s:'Andhra Pradesh'},{n:'Vijayawada',s:'Andhra Pradesh'},
+  {n:'Bhubaneswar',s:'Odisha'},{n:'Raipur',s:'Chhattisgarh'},{n:'Ranchi',s:'Jharkhand'},
+  {n:'Varanasi',s:'Uttar Pradesh'},{n:'Agra',s:'Uttar Pradesh'},
+  {n:'Ludhiana',s:'Punjab'},{n:'Amritsar',s:'Punjab'},{n:'Chandigarh',s:'Chandigarh'},
+  {n:'Jodhpur',s:'Rajasthan'},{n:'Udaipur',s:'Rajasthan'},{n:'Gangtok',s:'Sikkim'},
+  {n:'Panaji',s:'Goa'},{n:'Nainital',s:'Uttarakhand'},{n:'Siliguri',s:'West Bengal'},
+  {n:'Darjeeling',s:'West Bengal'},{n:'Nashik',s:'Maharashtra'},{n:'Vadodara',s:'Gujarat'},
+  {n:'Mysore',s:'Karnataka'},{n:'Mangalore',s:'Karnataka'},{n:'Puducherry',s:'Puducherry'},
+  {n:'Noida',s:'Uttar Pradesh'},{n:'Gurugram',s:'Haryana'},{n:'Faridabad',s:'Haryana'},
+];
+
+/* ── AUTOCOMPLETE ────────────────────────────────────────────────────── */
+const qEl=$('q'),acEl=$('acdrop');
+qEl.addEventListener('input',()=>{
+  const v=qEl.value.trim().toLowerCase();
+  if(v.length<2){acEl.classList.remove('open');return;}
+  const hits=CITIES.filter(c=>c.n.toLowerCase().includes(v)).slice(0,8);
+  if(!hits.length){acEl.classList.remove('open');return;}
+  acEl.innerHTML=hits.map(c=>`<div class="acitem" onclick="pick('${c.n}')">📍 ${c.n}<span class="acstate">${c.s}</span></div>`).join('');
+  acEl.classList.add('open');
+});
+document.addEventListener('click',e=>{if(!e.target.closest('.sbox'))acEl.classList.remove('open');});
+qEl.addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
+function pick(n){qEl.value=n;acEl.classList.remove('open');doSearch();}
+
+/* ── UI ─────────────────────────────────────────────────────────────── */
+const setLdr=(on,t='')=>{$('ldr').classList.toggle('show',on);if(t)$('lsub').textContent=t;};
+const setErr=(m)=>{const e=$('errbar');if(m){$('errtxt').textContent=m;e.classList.add('show');}else e.classList.remove('show');};
+const setBtn=(d)=>{$('sbtn').disabled=d;};
+
+/* ── RISK ENGINE ─────────────────────────────────────────────────────── */
+function calcRisk({rain1h,rain3h,pop,humidity,windKmh,wid,temp,dew,pressure}){
+  let score=0,factors=[];
+  const rr=rain1h||(rain3h/3)||0;
+  if(rr>=100){score+=100;factors.push({e:'💧',t:`${rr.toFixed(1)}mm/hr — IMD Cloudburst!`,b:1});}
+  else if(rr>=64.5){score+=78;factors.push({e:'💧',t:`${rr.toFixed(1)}mm/hr — Extremely Heavy`,b:1});}
+  else if(rr>=35.5){score+=52;factors.push({e:'💧',t:`${rr.toFixed(1)}mm/hr — Very Heavy`,b:1});}
+  else if(rr>=15.6){score+=30;factors.push({e:'💧',t:`${rr.toFixed(1)}mm/hr — Heavy Rain`,b:1});}
+  else if(rr>=7.6){score+=18;factors.push({e:'💧',t:`${rr.toFixed(1)}mm/hr — Moderate`,b:0});}
+  else if(rr>=2.5){score+=8;factors.push({e:'💧',t:`${rr.toFixed(1)}mm — Light Rain`,b:0});}
+  else factors.push({e:'💧',t:'No significant rain',b:0});
+  const pp=Math.round((pop||0)*100);
+  if(pp>=90){score+=20;factors.push({e:'🌧️',t:`${pp}% precipitation prob.`,b:1});}
+  else if(pp>=70){score+=12;factors.push({e:'🌧️',t:`${pp}% precipitation prob.`,b:0});}
+  else factors.push({e:'🌧️',t:`${pp}% precipitation chance`,b:0});
+  if(humidity>=95){score+=15;factors.push({e:'💦',t:`${humidity}% — Saturated air`,b:1});}
+  else if(humidity>=85){score+=8;factors.push({e:'💦',t:`${humidity}% humidity — Very High`,b:0});}
+  else factors.push({e:'💦',t:`${humidity}% humidity`,b:0});
+  const id=wid||800;
+  if(id>=200&&id<300){score+=25;factors.push({e:'⛈️',t:'Active Thunderstorm',b:1});}
+  else if(id===504||id===503){score+=20;factors.push({e:'🌧️',t:'Extreme/Very Heavy Rain',b:1});}
+  else if(id===502){score+=15;factors.push({e:'🌧️',t:'Heavy Intensity Rain',b:1});}
+  else if(id>=500&&id<600){score+=8;factors.push({e:'🌧️',t:'Rain detected',b:0});}
+  else factors.push({e:'☁️',t:id<300?'Thunderstorm':id<600?'Rain/Drizzle':id<700?'Snow':id<800?'Fog/Mist':'Clear/Cloudy',b:0});
+  if(windKmh>=60){score+=12;factors.push({e:'💨',t:`${windKmh.toFixed(0)} km/h — Gale`,b:1});}
+  else if(windKmh>=40){score+=7;factors.push({e:'💨',t:`${windKmh.toFixed(0)} km/h — Strong`,b:0});}
+  else factors.push({e:'💨',t:`${windKmh.toFixed(0)} km/h wind`,b:0});
+  if(dew!=null&&temp!=null){const dep=temp-dew;if(dep<=1){score+=15;factors.push({e:'🌡️',t:'Fully saturated air',b:1});}else if(dep<=3){score+=8;factors.push({e:'🌡️',t:'Near-saturated air',b:0});}else factors.push({e:'🌡️',t:`${dep.toFixed(1)}°C dew depression`,b:0});}
+  if(pressure){if(pressure<990){score+=10;factors.push({e:'🧭',t:`${pressure} hPa — Deep low`,b:1});}else if(pressure<1005){score+=5;factors.push({e:'🧭',t:`${pressure} hPa — Low`,b:0});}else factors.push({e:'🧭',t:`${pressure} hPa — Normal`,b:0});}
+  score=Math.min(score,100);
+  if(score>=75)return{score,cls:'extreme',emoji:'🚨',name:'EXTREME CLOUDBURST RISK',desc:'⚠️ CRITICAL: Imminent or active cloudburst (≥100mm/hr IMD threshold). Seek higher ground immediately. Evacuate low-lying/riverside areas. Do NOT go outdoors.',factors};
+  if(score>=50)return{score,cls:'high',emoji:'⛈️',name:'HIGH STORM RISK',desc:'⚠️ WARNING: Severe convective activity. Very heavy rainfall & flash flooding likely. Stay indoors. Monitor IMD/NDMA alerts continuously.',factors};
+  if(score>=25)return{score,cls:'moderate',emoji:'🌧️',name:'MODERATE RAIN RISK',desc:'ℹ️ ADVISORY: Significant rainfall expected. Avoid low-lying roads. Conditions may deteriorate rapidly.',factors};
+  return{score,cls:'low',emoji:'🌦️',name:'LOW RISK — NORMAL CONDITIONS',desc:'✅ No significant cloudburst threat. Standard precautions apply. Keep IMD Mausam app alerts enabled during monsoon.',factors};
+}
+
+/* ── FETCH ───────────────────────────────────────────────────────────── */
+async function doSearch(){
+  const city=qEl.value.trim();
+  if(!city){qEl.focus();return;}
+  acEl.classList.remove('open');
+  setErr('');setBtn(true);
+  setLdr(true,'Fetching current weather…');
+  $('dash').classList.remove('show');
+
+  // Build URLs — direct OWM (works from hosted server, localhost via proxy)
+  const curURL  =`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)},IN&appid=${API_KEY}`;
+  const fcstURL =`https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)},IN&appid=${API_KEY}&cnt=56`;
+
+  try{
+    setLdr(true,'Fetching current weather from OpenWeatherMap…');
+    const [curRes, fcRes] = await Promise.all([
+      fetch(curURL),
+      fetch(fcstURL)
+    ]);
+
+    if(!curRes.ok){
+      if(curRes.status===401)throw new Error('API key invalid or not yet activated. New OWM keys take up to 2 hours to activate. Please wait and try again.');
+      if(curRes.status===404)throw new Error(`City "${city}" not found. Try full name (e.g. "New Delhi") or add state (e.g. "Patna,Bihar").`);
+      if(curRes.status===429)throw new Error('Too many requests. Please wait a moment and try again.');
+      throw new Error(`Weather API error ${curRes.status}. Check your API key.`);
+    }
+
+    const cur   = await curRes.json();
+    const fcast = fcRes.ok ? await fcRes.json() : null;
+
+    renderDash(cur, fcast);
+
+  }catch(err){
+    // If fetch itself fails (network/CORS), give clear instructions
+    if(err.name==='TypeError'&&err.message.includes('fetch')){
+      setErr('Network error: Cannot reach OpenWeatherMap. Check your internet connection and try again.');
+    } else {
+      setErr(err.message||'Failed to fetch weather. Check internet & API key.');
+    }
+    setLdr(false);setBtn(false);
+    console.error(err);
+  }
+}
+
+/* ── RENDER ─────────────────────────────────────────────────────────── */
+function renderDash(cur, fcast){
+  setLdr(false);setBtn(false);
+  const tz=cur.timezone;
+  const tempNow=cur.main.temp-273.15;
+  const feelsNow=cur.main.feels_like-273.15;
+  const dewC=tempNow-((100-cur.main.humidity)/5);
+  const rain1h=cur.rain?.['1h']||0;
+  const rain3h=cur.rain?.['3h']||0;
+  const windKmh=(cur.wind?.speed||0)*3.6;
+  const pop=fcast?.list?.[0]?.pop||0;
+
+  // Location
+  $('d-city').textContent=cur.name;
+  $('d-sub').textContent=`${cur.sys?.country||'IN'} · ${cur.coord?.lat?.toFixed(3)}°N, ${cur.coord?.lon?.toFixed(3)}°E`;
+  $('d-coords').textContent=`Station ID: ${cur.id} · Timezone: UTC${tz>=0?'+':''}${tz/3600}`;
+  $('d-upd').innerHTML=`Updated: ${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} IST<br>Local: ${fmtT(Math.floor(Date.now()/1000),tz)}`;
+
+  // Risk
+  const risk=calcRisk({rain1h,rain3h,pop,humidity:cur.main.humidity,windKmh,wid:cur.weather?.[0]?.id,temp:tempNow,dew:dewC,pressure:cur.main.pressure});
+  const rc=$('rcard');
+  rc.className=`rcard fi d1 ${risk.cls}`;
+  $('remoji').textContent=risk.emoji;
+  $('rname').textContent=risk.name;
+  $('rdesc').textContent=risk.desc;
+  setTimeout(()=>{ $('mfill').style.width=risk.score+'%'; },200);
+  $('rfactors').innerHTML=risk.factors.map(f=>`<div class="factor${f.b?' bad':''}"><span>${f.e}</span><span>${f.t}</span></div>`).join('');
+
+  // Main weather
+  $('wmtemp').innerHTML=`${tempNow.toFixed(1)}<span class="wmunit">°C</span>`;
+  $('wmdesc').textContent=cur.weather?.[0]?.description||'—';
+  $('wmfeels').textContent=`Feels like ${feelsNow.toFixed(1)}°C  ·  ${cur.weather?.[0]?.main||''}`;
+  $('wmicon').textContent=oico(cur.weather?.[0]?.icon||'01d');
+
+  const todayFC=fcast?.list?.filter(f=>{
+    const fd=new Date((f.dt+tz)*1000),nd=new Date((Math.floor(Date.now()/1000)+tz)*1000);
+    return fd.getUTCDate()===nd.getUTCDate();
+  })||[];
+  const hiK=todayFC.length?Math.max(...todayFC.map(f=>f.main.temp)):cur.main.temp_max;
+  const loK=todayFC.length?Math.min(...todayFC.map(f=>f.main.temp)):cur.main.temp_min;
+  const rainDay=todayFC.reduce((s,f)=>s+(f.rain?.['3h']||0),0);
+  $('wm-hi').textContent=`${toCr(hiK)}°C`;
+  $('wm-lo').textContent=`${toCr(loK)}°C`;
+  $('wm-hum').textContent=`${cur.main.humidity}%`;
+  $('wm-rain').textContent=`${rainDay.toFixed(1)} mm`;
+
+  // Sun
+  $('sunrise').textContent=fmtT(cur.sys.sunrise,tz);
+  $('sunset').textContent=fmtT(cur.sys.sunset,tz);
+  $('sun-vis').textContent=`${((cur.visibility||10000)/1000).toFixed(1)} km`;
+  $('sun-cld').textContent=`${cur.clouds?.all||0}%`;
+  const uvEst=cur.clouds?.all<20?8:cur.clouds?.all<50?5:cur.clouds?.all<80?3:1;
+  $('sun-uv').textContent=uvEst;
+
+  // Sun arc position
+  const now=Math.floor(Date.now()/1000);
+  const dayLen=cur.sys.sunset-cur.sys.sunrise;
+  const elapsed=Math.max(0,Math.min(1,(now-cur.sys.sunrise)/dayLen));
+  const sx=10+(180*elapsed);
+  const sy=65-Math.sin(elapsed*Math.PI)*60;
+  $('sundot').setAttribute('cx',sx.toFixed(0));
+  $('sundot').setAttribute('cy',sy.toFixed(0));
+
+  // Stats grid
+  $('sgrid').innerHTML=`
+    <div class="scard" data-ico="🌡️"><div class="slbl">TEMPERATURE</div><div class="sval">${tempNow.toFixed(1)}<span class="sunit">°C</span></div><div class="ssub">Min ${toCr(cur.main.temp_min)}° · Max ${toCr(cur.main.temp_max)}°C</div></div>
+    <div class="scard" data-ico="💦"><div class="slbl">HUMIDITY</div><div class="sval">${cur.main.humidity}<span class="sunit">%</span></div><div class="ssub">Dewpoint ${dewC.toFixed(1)}°C</div><div class="sbar"><div class="sbar-fill" style="width:${cur.main.humidity}%;background:linear-gradient(90deg,#0077dd,var(--accent))"></div></div></div>
+    <div class="scard" data-ico="🌧️"><div class="slbl">RAINFALL 1H</div><div class="sval">${rain1h.toFixed(2)}<span class="sunit">mm</span></div><div class="ssub">${rain3h>0?`3h: ${rain3h.toFixed(2)}mm`:'No rain recorded'}</div></div>
+    <div class="scard" data-ico="💨"><div class="slbl">WIND SPEED</div><div class="sval">${windKmh.toFixed(1)}<span class="sunit">km/h</span></div><div class="ssub">${wdir(cur.wind?.deg||0)} · Gust ${((cur.wind?.gust||cur.wind?.speed||0)*3.6).toFixed(0)} km/h</div></div>
+    <div class="scard" data-ico="🧭"><div class="slbl">PRESSURE</div><div class="sval">${cur.main.pressure}<span class="sunit">hPa</span></div><div class="ssub">Sea level ${cur.main.sea_level||cur.main.pressure} hPa</div></div>
+    <div class="scard" data-ico="👁️"><div class="slbl">VISIBILITY</div><div class="sval">${((cur.visibility||10000)/1000).toFixed(1)}<span class="sunit">km</span></div><div class="ssub">${(cur.visibility||10000)>=8000?'✅ Excellent':(cur.visibility||10000)>=4000?'Good':(cur.visibility||10000)>=1000?'⚠️ Poor':'⛔ Very Poor'}</div></div>
+  `;
+
+  // Hourly
+  if(fcast?.list){
+    $('hscrl').innerHTML=fcast.list.slice(0,16).map(f=>{
+      const t=toCr(f.main.temp),mm=(f.rain?.['3h']||0).toFixed(1),pp=Math.round((f.pop||0)*100);
+      const hi=pp>70||parseFloat(mm)>5;
+      return`<div class="hcard${hi?' hi':''}"><div class="htime">${fmtT(f.dt,tz)}</div><div class="hico">${oico(f.weather?.[0]?.icon||'01d')}</div><div class="htmp">${t}°</div><div class="hrn">${mm}mm</div><div class="hpop">${pp}%</div></div>`;
+    }).join('');
+  }
+
+  // 7-day
+  if(fcast?.list){
+    const byDay={};
+    fcast.list.forEach(f=>{
+      const d=new Date((f.dt+tz)*1000);
+      const k=`${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+      if(!byDay[k])byDay[k]={dt:f.dt,items:[],day:fmtD(f.dt,tz)};
+      byDay[k].items.push(f);
+    });
+    $('fgrid').innerHTML=Object.values(byDay).slice(0,7).map((day,i)=>{
+      const tt=day.items.map(f=>f.main.temp);
+      const hi=Math.max(...tt),lo=Math.min(...tt);
+      const rain=day.items.reduce((s,f)=>s+(f.rain?.['3h']||0),0);
+      const pop2=Math.round(Math.max(...day.items.map(f=>f.pop||0))*100);
+      const mid=day.items[Math.floor(day.items.length/2)];
+      return`<div class="fcard${i===0?' today':''}"><div class="fday">${i===0?'TODAY':day.day}</div><div class="fico">${oico(mid?.weather?.[0]?.icon||'01d')}</div><div class="fhi">${toCr(hi)}°C</div><div class="flo">${toCr(lo)}°C</div><div class="frn">${rain.toFixed(1)}mm</div><div class="fpop">${pop2}%</div></div>`;
+    }).join('');
+  }
+
+  // Wind compass
+  const wd=cur.wind?.deg||0;
+  $('needle').style.transform=`rotate(${wd}deg)`;
+  $('wspd').innerHTML=`${windKmh.toFixed(0)}<span style="font-size:.9rem;color:var(--muted)"> km/h</span>`;
+  $('wdirlbl').textContent=`${wdir(wd)} (${wd}°) · Gust ${((cur.wind?.gust||cur.wind?.speed||0)*3.6).toFixed(0)} km/h`;
+
+  // UV
+  $('uvval').textContent=uvEst;
+  $('uvpip').style.left=Math.min((uvEst/11)*100,100)+'%';
+  $('uvdesc').textContent=uvEst<=2?'😎 Low — No protection needed':uvEst<=5?'🧴 Moderate — Use sunscreen':uvEst<=7?'⚠️ High — Limit exposure':uvEst<=10?'🚨 Very High — Avoid midday sun':'🔥 Extreme — Stay indoors';
+
+  // Pressure
+  const p=cur.main.pressure;
+  $('presval').textContent=`${p} hPa`;
+  $('presdesc').textContent=p<990?'⬇ Deep low — Storm system':p<1005?'⬇ Below normal — Unstable':p>1020?'⬆ High — Stable conditions':'↔ Normal range';
+
+  // Humidity card
+  $('humval').innerHTML=`${cur.main.humidity}<span style="font-size:.9rem;color:var(--muted)">%</span>`;
+  $('humbar').style.width=cur.main.humidity+'%';
+  $('humdesc').textContent=cur.main.humidity>=90?'🚨 Near-saturated — storm risk elevated':cur.main.humidity>=80?'Very humid — discomfort & instability':cur.main.humidity>=60?'Comfortable range':'Low — dry conditions';
+  $('dewval').textContent=`${dewC.toFixed(1)}°C`;
+  $('dewdesc').textContent=(tempNow-dewC)<=2?'🚨 Fully saturated — cloudburst conditions':(tempNow-dewC)<=5?'High moisture — atmospheric instability':'Normal dewpoint depression';
+
+  // Tips
+  $('tgrid').innerHTML=buildTips(risk.cls,cur.weather?.[0]?.id||800,windKmh).map(t=>
+    `<div class="tcard"><div class="tico">${t.e}</div><div><div class="ttl">${t.title}</div><div class="tbd">${t.body}</div></div></div>`
+  ).join('');
+
+  $('dash').classList.add('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function buildTips(cls,wid,ws){
+  const isT=wid>=200&&wid<300;
+  const t=[
+    {e:'📱',title:'Stay Informed',body:'Enable IMD Mausam app & follow @NDMA_India. Visit mausam.imd.gov.in for district-level storm alerts.'},
+    {e:'🚗',title:'Road Safety',body:cls==='low'?'Normal conditions. Watch for wet roads and reduced visibility during rain.':'Avoid flooded roads and underpasses. 30cm of fast-moving water can sweep a car — never drive through floods.'},
+    {e:'🏠',title:'Stay Indoors',body:cls==='extreme'||cls==='high'?'Remain indoors. Move to upper floors if flooding starts. Avoid touching wet electrical switches.':'Close windows during rain. Secure all loose balcony and terrace items.'},
+    {e:'⚡',title:'Lightning Safety',body:isT?'⚠️ THUNDERSTORM ACTIVE: Indoors only. Away from windows. Do not touch metal fixtures. Unplug non-essential electronics.':'If storm warning issued, avoid open fields, water bodies, and tall isolated trees.'},
+    {e:'🌊',title:'Flash Flood Alert',body:cls==='extreme'?'🚨 EVACUATE riverside, low-lying, basement areas NOW. Never cross flooded nallas or rivers on foot or vehicle.':'Stay away from riverbanks, drainage channels, and low-lying roads during heavy rain.'},
+    {e:'📦',title:'Emergency Kit',body:'Keep ready: torch + batteries, first-aid kit, 3 days water, dry food, charged power bank, document photocopies, cash.'},
+    {e:'🏥',title:'Health Advisory',body:'High humidity increases heat exhaustion. Stay hydrated. Elderly, children, and outdoor workers are most vulnerable in extreme weather.'},
+  ];
+  if(ws>50)t.push({e:'💨',title:'Strong Wind Warning',body:`Winds at ${ws.toFixed(0)} km/h. Secure outdoor items. Stay away from hoardings, towers, and large trees.`});
+  if(cls==='extreme')t.push({e:'🆘',title:'Emergency Numbers',body:'NDMA Helpline: 1078 | Police: 100 | Ambulance: 108 | Fire Brigade: 101 | State Disaster Helpline: 1070'});
+  return t;
+}
+
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+</script>
+</body>
+</html>
